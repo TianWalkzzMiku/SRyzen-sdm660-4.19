@@ -106,6 +106,8 @@ if [ x$1 == xc ]; then
     build Image
     $BSDIFF ${OUT_DIR}/Image ${BUILTIMAGE} ${ANYKERNEL_DIR}/bspatch/cam_newblobs
     make_zip
-    echo "Uploading KERNELZIP to GitHub Releases..."
-    gh release upload ${{ github.repository_owner }}/${{ github.repository }} ${{ env.KERNELZIP }} --clobber
+    # KERNELZIP sudah terisi dan di-export oleh script sebelumnya
+# Kirim nilainya agar bisa dibaca oleh Workflow YAML di step selanjutnya
+    echo "KERNELZIP=$KERNELZIP" >> "$GITHUB_ENV"
+    echo "Build finished! File $KERNELZIP is ready for upload by the workflow."
 fi
