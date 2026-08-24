@@ -1,4 +1,4 @@
-name: Kernel Build and Release
+name: build
 
 on:
   push:
@@ -14,18 +14,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up environment
+      - name: Set up environment & Build
         run: |
           bash build.sh c
         env:
-          KERNELZIP: ${{ env.KERNELZIP }}
-          PAT: ${{ secrets.PAT }}
-        continue-on-error: true
+          PAT: ${{ secrets.PAT }} # Diteruskan ke script jika script membutuhkan token
 
       - name: Upload Kernel Artifacts
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.KERNELZIP }}
-          tag_name: v1.0 # can be changed
+          tag_name: v1.0.${{ github.run_number }} # Tag dinamis agar tidak bentrok
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }} # don't forget to set secret variable
+          GITHUB_TOKEN: ${{ secrets.PAT }} # PAT digunakan sebagai token upload
+
+          
