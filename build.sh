@@ -17,7 +17,7 @@ setup_env() {
     export JOBS="$(grep -c '^processor' /proc/cpuinfo)"
     export BSDIFF=${KERNEL_DIR}/bin/bsdiff
     export BUILD_TIME=$(date +"%Y%m%d-%T")
-    export KERNELZIP=${ANYKERNEL_DIR}/SRyzenKernel-whyred-4.19-${BUILD_TIME}.zip
+    export KERNELZIP=${ANYKERNEL_DIR}/IceKernel-whyred-4.19-${BUILD_TIME}.zip
     export BUILTIMAGE=${OUT_DIR}/arch/arm64/boot/Image
     export BUILTDTB=${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom/whyred.dtb
     export BUILTFSTABDTB=${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom/whyred_fstab.dtb
@@ -85,7 +85,7 @@ disable_defconfig() {
 }
 
 setup_env && clean_up
-build vendor/super-whyred_defconfig
+build vendor/ice-whyred_defconfig
 disable_defconfig CONFIG_NEWCAM_BLOBS
 enable_defconfig CONFIG_DYNAMIC_WHYRED
 if [ x$1 == xgz ]; then
@@ -106,6 +106,10 @@ if [ x$1 == xc ]; then
     build Image
     $BSDIFF ${OUT_DIR}/Image ${BUILTIMAGE} ${ANYKERNEL_DIR}/bspatch/cam_newblobs
     make_zip
-    echo "Uploading KERNELZIP to GitHub Releases..."
-    gh release upload ${{ github.repository_owner }}/${{ github.repository }} ${{ env.KERNELZIP }} --clobber
+    # KERNELZIP sudah terisi dan di-export oleh script sebelumnya
+# Kirim nilainya agar bisa dibaca oleh Workflow YAML di step selanjutnya
+    echo "KERNELZIP=$KERNELZIP" >> "$GITHUB_ENV"
+    echo "Build finished! File $KERNELZIP is ready for upload by the workflow."
 fi
+
+
