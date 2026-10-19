@@ -56,7 +56,7 @@ build() {
         LLVM_IAS=1
 
     BUILD_END=$(date +"%s")
-    DIFF=$((${BUILD_END} - ${BUILD_START}))
+    DIFF=$(((${BUILD_END} - ${BUILD_START})))
     echo -e "${yellow}$1 Build completed in $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.$nocol"
 }
 
@@ -72,6 +72,28 @@ make_zip() {
     BUILD_TIME=$(date +"%Y%m%d-%T")
     zip -r ${KERNELZIP} * > /dev/null
     cd -
+}
+
+upload_telegram() {
+    # Requires environment variables TG_TOKEN and TG_CHAT_ID to be set
+    if [ -z "${TG_TOKEN}" ] || [ -z "${TG_CHAT_ID}" ]; then
+        echo -e "${red}TG_TOKEN or TG_CHAT_ID not set. Export them before running the script to enable Telegram uploads.${nocol}"
+        echo "Example: export TG_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+        echo "         export TG_CHAT_ID=@your_channel_or_chat_id_or_numeric_id"
+        exit 1
+    fi
+
+    echo -e "${blue}Uploading ${KERNELZIP} to Telegram${nocol}"
+    RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendDocument" \
+        -F chat_id="${TG_CHAT_ID}" \
+        -F document=@"${KERNELZIP}" \
+        -F caption="SRyzen Kernel build ${BUILD_TIME}")
+
+    OK=$(echo "${RESPONSE}" | grep -o '"ok":true' || true)
+    if [ -z "${OK}" ]; then
+        echo -e "${red}Telegram upload failed: ${RESPONSE}${nocol}"
+        exit 1
+    fi
 }
 
 enable_defconfig() {
@@ -106,6 +128,7 @@ if [ x$1 == xc ]; then
     build Image
     $BSDIFF ${OUT_DIR}/Image ${BUILTIMAGE} ${ANYKERNEL_DIR}/bspatch/cam_newblobs
     make_zip
-    curl -sL https://git.io/file-transfer | sh
-    ./transfer wet ${KERNELZIP}
+
+    # Upload using Telegram bot instead of file-transfer (wetransfer)
+    upload_telegram
 fi
